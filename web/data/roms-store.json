@@ -214,5 +214,41 @@
         "rom_kernel":"linux",
         "rom_extra":"-cpu qemu64 -smp sockets=1,cores=2,threads=1 -m 1G -drive file=FydeOS-VMware-v18.0-Preview1-io-disk1.vmdk,aio=threads,cache=unsafe -vga std -device intel-hda -device hda-duplex -device e1000,netdev=n0 -netdev user,id=n0 -accel tcg,tb-size=2048",
         "final_rom_file_name":"FydeOS-VMware-v18.0-Preview1-io-disk1.vmdk"
+    },
+    {
+        "rom_name":"Linux Mint 21 (x86_64)",
+        "rom_icon":"https://upload.wikimedia.org/wikipedia/commons/3/3f/Logo_Linux_Mint.png",
+        "rom_url":"",
+        "rom_path":"linuxmint-21.qcow2",
+        "rom_avail":false,
+        "rom_size":"2.5GB",
+        "rom_arch":"X86_64",
+        "rom_kernel":"linux",
+        "rom_extra":"-M q35 -cpu qemu64,+ssse3,+sse4.1,+sse4.2,+popcnt,+cx16 -smp sockets=1,cores=4,threads=1 -m 2048 -vga virtio -device intel-hda -device hda-duplex -device virtio-net-pci,netdev=n0 -netdev user,id=n0 -accel tcg,thread=multi,tb-size=2048",
+        "final_rom_file_name":"linuxmint-21.qcow2"
+    },
+    {
+        "rom_name":"Pop!_OS 22.04 (x86_64)",
+        "rom_icon":"https://upload.wikimedia.org/wikipedia/commons/4/4b/Pop_OS_Icon.png",
+        "rom_url":"",
+        "rom_path":"popos-22.04.qcow2",
+        "rom_avail":false,
+        "rom_size":"3.0GB",
+        "rom_arch":"X86_64",
+        "rom_kernel":"linux",
+        "rom_extra":"-M q35 -cpu qemu64,+ssse3,+sse4.1,+sse4.2,+popcnt,+cx16 -smp sockets=1,cores=4,threads=1 -m 2048 -vga virtio -device intel-hda -device hda-duplex -device virtio-net-pci,netdev=n0 -netdev user,id=n0 -accel tcg,thread=multi,tb-size=2048",
+        "final_rom_file_name":"popos-22.04.qcow2"
+    },
+    {
+        "rom_name":"Ubuntu 22.04 (ARM64)",
+        "rom_icon":"https://upload.wikimedia.org/wikipedia/commons/a/ab/Logo-ubuntu_cof-orange-hex.svg",
+        "rom_url":"",
+        "rom_path":"ubuntu-22.04-arm64.qcow2",
+        "rom_avail":false,
+        "rom_size":"2.0GB",
+        "rom_arch":"ARM64",
+        "rom_kernel":"linux",
+        "rom_extra":"-M virt,highmem=on -cpu max -smp sockets=1,cores=4,threads=1 -m 2048 -device ramfb -device intel-hda -device hda-duplex -device virtio-net-pci,netdev=n0 -netdev user,id=n0 -accel tcg,thread=multi,tb-size=2048",
+        "final_rom_file_name":"ubuntu-22.04-arm64.qcow2"
     }
 ]

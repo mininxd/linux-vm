@@ -61,6 +61,11 @@ public class StartVM {
         String machineParams = "";
         if (!ParamManager.hasMachine(extraParams)) {
             String machine = Objects.requireNonNull(VMCreatorSelector.getMachine(activity, MainSettingsManager.getArch(activity), vmData.machine).get("value")).toString();
+            if (machine.isEmpty()) {
+                if (MainSettingsManager.getArch(activity).equals(MainSettingsManager.ARM64_ARCH)) {
+                    machine = "virt";
+                }
+            }
             if (!machine.isEmpty()) {
                 machineParams = "-M " + machine;
             }
@@ -91,12 +96,16 @@ public class StartVM {
                 flags += ",+vmx,+svm";
             }
 
-            if (!flags.isEmpty() && cpu.isEmpty()) {
+            if (cpu.isEmpty()) {
                 if (MainSettingsManager.getArch(activity).equals(MainSettingsManager.X86_64_ARCH)) {
-                    cpu = "qemu64";
+                    cpu = "qemu64,+ssse3,+sse4.1,+sse4.2,+popcnt,+cx16";
                 } else if (MainSettingsManager.getArch(activity).equals(MainSettingsManager.I386_ARCH)) {
                     cpu = "qemu32";
+                } else if (MainSettingsManager.getArch(activity).equals(MainSettingsManager.ARM64_ARCH)) {
+                    cpu = "max";
                 }
+            } else if (cpu.equals("qemu64")) {
+                cpu = "qemu64,+ssse3,+sse4.1,+sse4.2,+popcnt,+cx16";
             }
 
             if (!cpu.isEmpty()) {
@@ -146,6 +155,12 @@ public class StartVM {
         String graphics = Objects.requireNonNull(VMCreatorSelector.getGraphicsCard(activity, vmData.graphicCard).get("value")).toString();
         if (!graphics.isEmpty()) {
             graphicsParams = graphics.equals(ListManager.NONE_VALUE) ? " -vga none" : " -device " + graphics;
+        } else {
+            if (MainSettingsManager.getArch(activity).equals(MainSettingsManager.ARM64_ARCH)) {
+                graphicsParams = " -device ramfb";
+            } else {
+                graphicsParams = " -vga std";
+            }
         }
 
         String networkParams = "";
@@ -230,8 +245,11 @@ public class StartVM {
 
             if (!img.isEmpty()) {
                 if (ifType.isEmpty()) {
-                    hdd0 = "-hda";
-                    hdd0 += " '" + img + "'";
+                    if (MainSettingsManager.getArch(activity).equals("ARM64")) {
+                        hdd0 = "-drive media=disk,if=virtio,file='" + img + "'";
+                    } else {
+                        hdd0 = "-hda '" + img + "'";
+                    }
                 } else {
                     hdd0 = "-drive";
                     hdd0 += " media=disk";
@@ -240,7 +258,7 @@ public class StartVM {
 
                     if ((MainSettingsManager.getArch(activity).equals("ARM64") && ifType.equals("ide")) || MainSettingsManager.getArch(activity).equals("PPC")) {
                         hdd0 = "-drive";
-                        hdd0 += " media=disk";
+                        hdd0 += " media=disk,if=virtio";
                         hdd0 += ",file='" + img + "'";
                     }
                 }
