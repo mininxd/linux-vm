@@ -1,7 +1,5 @@
 plugins {
     id 'com.android.application'
-    id 'com.google.gms.google-services'
-    id 'com.google.firebase.crashlytics'
     id 'com.google.android.gms.oss-licenses-plugin'
 }
 
@@ -94,10 +92,6 @@ dependencies {
     implementation libs.androidx.preference.ktx
     implementation libs.androidx.swiperefreshlayout
     implementation libs.androidx.viewpager
-    implementation platform(libs.firebase.bom)
-    implementation libs.firebase.analytics
-    implementation libs.firebase.crashlytics
-    implementation libs.firebase.messaging
     implementation libs.guava
     implementation libs.gson
     implementation libs.androidx.window

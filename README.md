@@ -71,14 +71,6 @@ or
 ### 😼 Advanced
 Advanced options are [here](ADVANCED.md).
 
-# ▶️ We're now on the Play Store
-Vectras VM is on the Play Store with the new Qemu 10, it runs natively on Android instead of requiring proot like the version on GitHub. Try it now!
-
-![Version](https://img.shields.io/endpoint?url=https://play.cuzi.workers.dev/play?id=com.vectrasllc.vm&label=Play%20Store&message=$version&color=blue)
-
-<a href="https://play.google.com/store/apps/details?id=com.vectrasllc.vm">
-<img src="resources/GetItOnGooglePlay_Badge_Web_color_English.png" style="width: 192px;" />
-</a>
 
 # ❤️ Thanks to
 - [3DFX QEMU PATCH](https://github.com/kjliew/qemu-3dfx)

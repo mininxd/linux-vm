@@ -2,32 +2,17 @@ package com.anbui.elephant.interaction;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Handler;
-import android.os.Looper;
 
 import androidx.preference.PreferenceManager;
-
-import com.anbui.elephant.log.LogPrinter;
-import com.anbui.elephant.retrofit2utils.Retrofit2Utils;
-import com.google.gson.Gson;
-import com.vectras.vm.utils.JSONUtils;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public class Interaction {
-    private final String TAG = "com.anbui.elephant.interaction.Interaction";
-    private final String EGG_URL = "https://anbui.ovh/egg/";
-    private String GET_URL = EGG_URL + "contentinfo?id=%s&app=vectrasvm";
-    private final String VIEW_URL = EGG_URL + "updateview?app=vectrasvm";
-    private final String LIKE_URL = EGG_URL + "updatelike?app=vectrasvm";
-
     private final String contentId;
-    private DataInteraction dataInteraction;
     private final SharedPreferences sharedPreferences;
-    public boolean isRequesting;
-    public boolean isAllowAction;
-    private Runnable waitingAction;
+    public boolean isRequesting = false;
+    public boolean isAllowAction = true;
 
     public interface InteractionCallback {
         void onResult(boolean isSuccess, int views, int likes);
@@ -35,7 +20,6 @@ public class Interaction {
 
     public Interaction(Context context, String contentId) {
         this.contentId = contentId;
-        GET_URL = String.format(GET_URL, contentId);
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         convertOldLocalDataToNewFormat("views");
@@ -44,177 +28,31 @@ public class Interaction {
 
     public void initialize(InteractionCallback callback) {
         if (!isReady()) {
-            callback.onResult(false, 1, 0);
-            LogPrinter.print(TAG, "Not ready in initialize.");
+            callback.onResult(false, 0, 0);
             return;
         }
 
-        get(((isSuccess, views, likes) -> {
-            view(callback);
-            isAllowAction = true;
-        }));
-
-        LogPrinter.print(TAG, "Initialized.");
+        view(callback);
+        isAllowAction = true;
     }
 
     public void get(InteractionCallback callback) {
-        if (isRequesting) {
-            LogPrinter.print(TAG, "Busy, there's another connection in view.");
-            return;
-        }
-
         if (!isReady()) {
-            callback.onResult(false, 1, 0);
-            LogPrinter.print(TAG, "Not ready in get.");
+            callback.onResult(false, 0, 0);
             return;
         }
 
-        isRequesting = true;
-
-        Retrofit2Utils.get(GET_URL, ((isSuccess, body, status, error) -> {
-            isRequesting = false;
-            isAllowAction = true;
-
-            if (isSuccess && JSONUtils.isValidFromString(body)) {
-                dataInteraction = new Gson().fromJson(body, DataInteraction.class);
-                callback.onResult(true, dataInteraction.views, dataInteraction.likes);
-                LogPrinter.print(TAG, "Get succeed.");
-            } else {
-                callback.onResult(false, 1, 0);
-                LogPrinter.print(TAG, "Get unsucceed.");
-            }
-        }));
+        callback.onResult(true, getViewCount(), getLikeCount());
     }
-
-    private boolean isTryingView;
 
     public void view(InteractionCallback callback) {
-        if (isRequesting || !isAllowAction) {
-            if (isAllowAction) waitingAction = () -> view(callback);
-            LogPrinter.print(TAG, "Busy, there's another connection, or the action was blocked due to the action being performed too quickly in view.");
-            return;
-        }
-
-        if (isViewed()) {
-            callback.onResult(true, dataInteraction != null ? dataInteraction.views : 1, dataInteraction != null ? dataInteraction.likes : 0);
-            LogPrinter.print(TAG, "Viewed.");
-            return;
-        }
-
-        if (!isReadyToPost() && !isTryingView) {
-            isTryingView = true;
-            get((success, views, likes) -> view(callback));
-            LogPrinter.print(TAG, "Not ready to post in view.");
-            return;
-        } else {
-            isTryingView = false;
-            if (!isReadyToPost()) {
-                callback.onResult(false, 1, 0);
-                return;
-            }
-        }
-
-        String jsonRaw = "{"
-                + "\"id\":\"" + contentId + "\","
-                + "\"token\":" + "\"" + dataInteraction.token + "\""
-                + "}";
-
-        isRequesting = true;
-
-        Retrofit2Utils.post(VIEW_URL, jsonRaw, ((isSuccess, body, status, error) -> {
-            isRequesting = false;
-
-            if (isNeedRetry(status) && !isTryingView) {
-                isTryingView = true;
-                get((success, views, likes) -> view(callback));
-                LogPrinter.print(TAG, "Trying again in view.");
-                return;
-            } else {
-                isTryingView = false;
-            }
-
-            if (isSuccess && JSONUtils.isValidFromString(body)) {
-                DataInteraction data = new Gson().fromJson(body, DataInteraction.class);
-                dataInteraction.views = data.count;
-                setViews();
-                callback.onResult(true, data.count, getLikeCount());
-                LogPrinter.print(TAG, "View succeed.");
-            } else {
-                callback.onResult(false, 1, 0);
-                LogPrinter.print(TAG, "View unsucceed.");
-            }
-
-            if (waitingAction != null) {
-                waitingAction.run();
-                waitingAction = null;
-            }
-
-            isAllowAction = false;
-            new Handler(Looper.getMainLooper()).postDelayed(() -> isAllowAction = true, 1000);
-        }));
+        setViews();
+        callback.onResult(true, getViewCount(), getLikeCount());
     }
 
-    private boolean isTryingLike;
-
     public void like(InteractionCallback callback) {
-        if (isRequesting || !isAllowAction) {
-            if (isAllowAction) waitingAction = () -> like(callback);
-            LogPrinter.print(TAG, "Busy, there's another connection, or the action was blocked due to the action being performed too quickly in like.");
-            return;
-        }
-
-        if (!isReadyToPost() && !isTryingLike) {
-            isTryingLike = true;
-            get((success, views, likes) -> like(callback));
-            LogPrinter.print(TAG, "Not ready to post in like.");
-            return;
-        } else {
-            isTryingLike = false;
-            if (!isReadyToPost()) {
-                callback.onResult(false, 1, 0);
-                return;
-            }
-        }
-
-        String jsonRaw = "{"
-                + "\"id\":\"" + contentId + "\","
-                + "\"addcount\":" + (isLiked() ? "-1" : "1") + ","
-                + "\"token\":" + "\"" + dataInteraction.token + "\""
-                + "}";
-
-        isRequesting = true;
-
-        Retrofit2Utils.post(LIKE_URL, jsonRaw, ((isSuccess, body, status, error) -> {
-            isRequesting = false;
-
-            if (isNeedRetry(status) && !isTryingLike) {
-                isTryingLike = true;
-                get((success, views, likes) -> like(callback));
-                LogPrinter.print(TAG, "Trying again in like.");
-                return;
-            } else {
-                isTryingLike = false;
-            }
-
-            if (isSuccess && JSONUtils.isValidFromString(body)) {
-                DataInteraction data = new Gson().fromJson(body, DataInteraction.class);
-                dataInteraction.likes = data.count;
-                setLikes();
-                callback.onResult(true, getViewCount(), data.count);
-                LogPrinter.print(TAG, "Like succeed.");
-            } else {
-                callback.onResult(false, 1, 0);
-                LogPrinter.print(TAG, "Like unsucceed.");
-            }
-
-            if (waitingAction != null) {
-                waitingAction.run();
-                waitingAction = null;
-            }
-
-            isAllowAction = false;
-            new Handler(Looper.getMainLooper()).postDelayed(() -> isAllowAction = true, 1000);
-        }));
+        setLikes();
+        callback.onResult(true, getViewCount(), getLikeCount());
     }
 
     public String getFomatedViewCount() {
@@ -226,25 +64,15 @@ public class Interaction {
     }
 
     public int getViewCount() {
-        return dataInteraction != null ? dataInteraction.views : 1;
+        return getViews().size();
     }
 
     public int getLikeCount() {
-        return dataInteraction != null ? dataInteraction.likes : (isLiked() ? 1 : 0);
+        return isLiked() ? 1 : 0;
     }
 
     private boolean isReady() {
         return contentId != null && !contentId.isEmpty();
-    }
-
-    private boolean isReadyToPost() {
-        return dataInteraction != null
-                && dataInteraction.token != null && !dataInteraction.token.isEmpty()
-                && contentId != null && !contentId.isEmpty();
-    }
-
-    private boolean isNeedRetry(int statusCode) {
-        return statusCode == 403;
     }
 
     public boolean isLiked() {
@@ -266,7 +94,7 @@ public class Interaction {
     }
 
     public Set<String> getLikes() {
-        return  new HashSet<>(sharedPreferences.getStringSet("likes", new HashSet<>()));
+        return new HashSet<>(sharedPreferences.getStringSet("likes", new HashSet<>()));
     }
 
     public void setViews() {
@@ -286,10 +114,9 @@ public class Interaction {
         if (raw instanceof Set) return;
 
         if (raw instanceof String old) {
-
             Set<String> newSet = new HashSet<>();
 
-            if (old != null && !old.isEmpty()) {
+            if (!old.isEmpty()) {
                 String[] parts = old.split(",");
 
                 for (String part : parts) {

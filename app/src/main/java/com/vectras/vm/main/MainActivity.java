@@ -524,11 +524,6 @@ public class MainActivity extends AppCompatActivity implements RomStoreFragment.
                 } else {
                     FileUtils.openFolder(this, AppConfig.maindirpath);
                 }
-            } else if (id == R.id.navigation_item_donate) {
-                String tw = "https://www.patreon.com/VectrasTeam";
-                Intent w = new Intent(ACTION_VIEW);
-                w.setData(Uri.parse(tw));
-                startActivity(w);
             } else if (id == R.id.mini_tools) {
                 Intent intent = new Intent();
                 intent.setClass(this, Minitools.class);
@@ -543,8 +538,6 @@ public class MainActivity extends AppCompatActivity implements RomStoreFragment.
                     intent.setData(Uri.parse("https://www.qemu.org/docs/master/"));
                 }
                 startActivity(intent);
-            } else if (id == R.id.navigation_item_try_play_store_version) {
-                IntentUtils.launchPlayStoreVersion(this);
             }
 
             return false;

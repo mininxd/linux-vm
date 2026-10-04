@@ -182,11 +182,11 @@ public class SetupWizard2Activity extends AppCompatActivity {
         });
 
         //Final steps
-        bindingFinalSteps.tvLater.setOnClickListener(v -> uiControllerFinalSteps(currentStep + 1));
+        bindingFinalSteps.tvLater.setOnClickListener(v -> uiControllerFinalSteps(currentStep == STEP_JOIN_COMMUNITY ? STEP_FINISH : currentStep + 1));
 
         bindingFinalSteps.btnContinue.setOnClickListener(v -> {
             if (currentStep == STEP_JOIN_COMMUNITY) {
-                uiControllerFinalSteps(currentStep + 1);
+                uiControllerFinalSteps(STEP_FINISH);
                 IntentUtils.openTelegramLink(this);
                 //Don't show join Telegram dialog again
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -194,8 +194,7 @@ public class SetupWizard2Activity extends AppCompatActivity {
                 edit.putBoolean("tgDialog", true);
                 edit.apply();
             } else if (currentStep == STEP_PATERON) {
-                uiControllerFinalSteps(currentStep + 1);
-                IntentUtils.openUrl(this, AppConfig.patreonLink);
+                uiControllerFinalSteps(STEP_FINISH);
             } else {
                 startActivity(new Intent(this, MainActivity.class));
                 finish();
@@ -348,12 +347,12 @@ public class SetupWizard2Activity extends AppCompatActivity {
 
         TransitionManager.beginDelayedTransition(bindingFinalSteps.mainContent);
 
+        if (step == STEP_PATERON) {
+            step = STEP_FINISH;
+        }
+
         if (step == STEP_JOIN_COMMUNITY) {
             bindingFinalSteps.linearcommunity.setVisibility(View.VISIBLE);
-            bindingFinalSteps.tvLater.setVisibility(View.VISIBLE);
-            bindingFinalSteps.btnContinue.setText(getString(R.string.join));
-        } else if (step == STEP_PATERON) {
-            bindingFinalSteps.lineardonate.setVisibility(View.VISIBLE);
             bindingFinalSteps.tvLater.setVisibility(View.VISIBLE);
             bindingFinalSteps.btnContinue.setText(getString(R.string.join));
         } else if (step == STEP_FINISH) {
