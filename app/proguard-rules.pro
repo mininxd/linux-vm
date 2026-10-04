@@ -1,30 +1,41 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Add project specific ProGuard / R8 rules here.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
-
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
 -dontobfuscate
 -dontwarn org.slf4j.impl.StaticLoggerBinder
--keep class com.vectras.qemu.MainSettingsManager$UserInterfacePreferencesFragment { *; }
--keep class com.vectras.qemu.MainSettingsManager$QemuPreferencesFragment { *; }
--keep class com.vectras.qemu.MainSettingsManager$VncPreferencesFragment { *; }
+-dontwarn okhttp3.**
+-dontwarn retrofit2.**
+-dontwarn com.google.common.**
+-dontwarn javax.annotation.**
+
+-keepattributes Signature,InnerClasses,EnclosingMethod,*Annotation*
+
+# Preserve native methods and JNI callback classes
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+-keep class com.vectras.vm.utils.CpuHelper { *; }
+-keep class com.vectras.vm.utils.GpuHelper { *; }
+-keep class com.termux.app.TermuxInstaller { *; }
+-keep class com.vectras.vm.x11.CmdEntryPoint { *; }
+-keep class com.vectras.vm.x11.LorieView { *; }
+-keep class com.vectras.vm.x11.Prefs { *; }
+-keep class com.vectras.vm.x11.LoriePreferences** { *; }
+-keep class * extends com.vectras.vm.x11.LoriePreferences$PrefsProto { *; }
+
+# Settings and preference fragments
+-keep class com.vectras.qemu.MainSettingsManager** { *; }
 -keep class android.media.LoudnessCodecController { *; }
--keepclassmembers class com.google.firebase.database.GenericTypeIndicator{*;}
--keep class * extends com.google.firebase.database.GenericTypeIndicator{*;}
--keep class com.google.firebase.database.GenericTypeIndicator{*;}
+
+# Termux and VNC
+-keep class com.termux.** { *; }
+-keep class android.androidVNC.** { *; }
+
+# Models, JSON and Gson serialization
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+-keep class com.google.gson.** { *; }
+-keep class com.vectras.vm.main.vms.** { *; }
+-keep class com.vectras.vm.main.romstore.** { *; }
+-keep class com.vectras.vm.main.softwarestore.** { *; }
+-keep class com.anbui.elephant.** { *; }
