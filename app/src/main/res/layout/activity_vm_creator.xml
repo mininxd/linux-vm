@@ -120,47 +120,6 @@
 
             </LinearLayout>
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/opencqcm"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="2dp"
-                android:background="@drawable/object_shape_middle_high"
-                android:padding="16dp">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:orientation="vertical"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/opencqcm_arrow"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/edit_with_create_command"
-                        android:textSize="18sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/edit_with_create_command_content"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <ImageView
-                    android:id="@+id/opencqcm_arrow"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/open_in_new_24px"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/ln_board"

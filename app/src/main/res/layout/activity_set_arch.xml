@@ -250,55 +250,13 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/buttongetcm"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/object_shape_top_tertiary"
-                    android:padding="16dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="2dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:orientation="vertical"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@id/buttongetcm_arrow"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/create_command"
-                            android:textSize="18sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/note_for_selecting_create_command"
-                            android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <ImageView
-                        android:id="@+id/buttongetcm_arrow"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/open_in_new_24px"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-                <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/webBtn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/object_shape_bottom_tertiary"
+                    android:background="@drawable/object_shape_single_high"
                     android:padding="16dp"
-                    android:layout_marginVertical="2dp">
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="2dp">
 
                     <LinearLayout
                         android:layout_width="0dp"

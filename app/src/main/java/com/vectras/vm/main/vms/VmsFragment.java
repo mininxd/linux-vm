@@ -1,7 +1,10 @@
 package com.vectras.vm.main.vms;
 
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+
+import com.vectras.vm.creator.SetArchActivity;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -87,7 +90,9 @@ public class VmsFragment extends Fragment implements CallbackInterface.HomeCallT
         vmsHomeAdapter = new VmsHomeAdapter(requireActivity(), data);
         binding.rvRomlist.setAdapter(vmsHomeAdapter);
 
-        binding.bnRomstore.setOnClickListener(v -> vmsCallToHomeListener.openRomStore());
+        binding.bnRomstore.setText(R.string.create);
+        binding.bnRomstore.setIconResource(R.drawable.add_24px);
+        binding.bnRomstore.setOnClickListener(v -> startActivity(new Intent(requireActivity(), SetArchActivity.class)));
 
         binding.bnRepair.setOnClickListener(V -> {
             VMManager.startFixRomsDataJson();

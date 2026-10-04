@@ -83,6 +83,7 @@
                 android:layout_marginBottom="2dp"
                 android:background="@drawable/object_shape_middle_high"
                 android:padding="16dp"
+                android:visibility="gone"
                 android:gravity="center_vertical">
 
                 <ImageView

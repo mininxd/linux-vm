@@ -382,8 +382,6 @@ public class VMCreatorActivity extends AppCompatActivity {
 
         utils.removeTemp();
 
-        checkCreateCommandConfig();
-
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -560,7 +558,12 @@ public class VMCreatorActivity extends AppCompatActivity {
             case MainSettingsManager.PPC_ARCH -> current.cores = 0;
         }
 
-        current.memory = 512;
+        if (currentArch.equals(MainSettingsManager.X86_64_ARCH) || currentArch.equals(MainSettingsManager.ARM64_ARCH)) {
+            current.memory = (RamInfo.vectrasMemory(this) >= 3500) ? 2048 : 1024;
+            current.isShowBootMenu = true;
+        } else {
+            current.memory = 512;
+        }
 
         current.graphicCard = 1; // Default
 
@@ -1062,25 +1065,5 @@ public class VMCreatorActivity extends AppCompatActivity {
                 current.cdrom1.isEmpty() &&
                 current.fda.isEmpty() &&
                 current.fdb.isEmpty());
-    }
-
-    private void checkCreateCommandConfig() {
-        if (PackageUtils.getVersionCode("com.anbui.cqcm.app", this) < 735 || !FileUtils.isFileExists(VmFileManager.getCreateCommandConfigFile(vmID))) {
-            binding.opencqcm.setVisibility(View.GONE);
-        } else {
-            binding.opencqcm.setOnClickListener(v -> {
-                if (PackageUtils.isInstalled("com.anbui.cqcm.app", this)) {
-                    Intent intentcqcm = new Intent();
-                    intentcqcm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    intentcqcm.setComponent(new ComponentName("com.anbui.cqcm.app", "com.anbui.cqcm.app.DownloadActivity"));
-                    intentcqcm.putExtra("content", FileUtils.readAFile(VmFileManager.getCreateCommandConfigFile(vmID)));
-                    intentcqcm.putExtra("vectrasVMId", vmID);
-                    startActivity(intentcqcm);
-                    finish();
-                } else {
-                    IntentUtils.openUrl(this, "https://play.google.com/store/apps/details?id=com.anbui.cqcm.app", true);
-                }
-            });
-        }
     }
 }

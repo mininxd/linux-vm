@@ -287,7 +287,7 @@ public class StartVM {
                         cdrom += " '" + vmConfigs.imgCdrom + "'";
                     } else {
                         cdrom = "-drive";
-                        cdrom += " media=cdromdrive1";
+                        cdrom += " media=cdrom";
                         cdrom += ",file='" + vmConfigs.imgCdrom + "'";
                     }
                 }
@@ -307,7 +307,7 @@ public class StartVM {
                     cdromParams += " if=none,id=cdromdrive1,format=raw,media=cdrom,file='" + vmConfigs.cdrom1 + "'";
                 } else {
                     cdromParams = "-drive";
-                    cdromParams += " media=cdromdrive1";
+                    cdromParams += " media=cdrom";
                     cdromParams += ",file='" + vmConfigs.cdrom1 + "'";
                 }
                 params.add(cdromParams);

@@ -136,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements RomStoreFragment.
 
     @Override
     public void openRomStore() {
-        bindingContent.bottomNavigation.setSelectedItemId(R.id.item_romstore);
+        bindingContent.bottomNavigation.setSelectedItemId(R.id.item_home);
     }
 
     Handler handlerUpdateLog = new Handler(Looper.getMainLooper());
@@ -458,7 +458,7 @@ public class MainActivity extends AppCompatActivity implements RomStoreFragment.
 
         if (isOpenRomStore) {
             isOpenRomStore = false;
-            bindingContent.bottomNavigation.setSelectedItemId(R.id.item_romstore);
+            bindingContent.bottomNavigation.setSelectedItemId(R.id.item_home);
         } else if (isOpenHome) {
             isOpenHome = false;
             if (binding.searchview.isShowing()) binding.searchview.hide();
