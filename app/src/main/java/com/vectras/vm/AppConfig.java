@@ -21,8 +21,8 @@ public class AppConfig {
     public static final int standardSetupVersion = 922202607;
     public static final int coreSetupVersion = 0;
     public static String vectrasWebsite = "https://vectras.vercel.app/";
-    public static String vectrasWebsiteRaw = "https://raw.githubusercontent.com/AnBui2004/Vectras-VM-Emu-Android/refs/heads/master/web/";
-    public static String bootstrapfileslink = vectrasWebsiteRaw + "/data/setupfiles4.json";
+    public static String vectrasWebsiteRaw = "https://raw.githubusercontent.com/mininxd/linux-vm/master/web/";
+    public static String bootstrapfileslink = vectrasWebsiteRaw + "data/setupfiles4.json";
     public static String vectrasHelp = vectrasWebsite + "how.html";
     public static String community = vectrasWebsite + "community.html";
     public static String vectrasRaw = vectrasWebsiteRaw + "data/";
@@ -30,7 +30,7 @@ public class AppConfig {
     public static String vectrasPrivacy = vectrasRaw + "PRIVACYANDPOLICY.md";
     public static String vectrasTerms = vectrasRaw + "TERMSOFSERVICE.md";
     public static String vectrasInfo = vectrasRaw + "info.md";
-    public static String vectrasRepo = "https://github.com/xoureldeen/Vectras-VM-Android";
+    public static String vectrasRepo = "https://github.com/mininxd/linux-vm";
     public static String updateJson = vectrasRaw + "UpdateConfig.json";
     public static String blogJson = vectrasRaw + "news_list.json";
     // public static final String storeJson = vectrasRaw + "store_list.json";

@@ -43,6 +43,7 @@ import com.vectras.vm.utils.TarUtils;
 import com.vectras.vm.utils.UIUtils;
 import com.vectras.vterm.Terminal2;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
@@ -145,21 +146,41 @@ public class SetupWizard2Activity extends AppCompatActivity {
         binding.btnAllowPermission.setOnClickListener(v -> PermissionUtils.requestStoragePermission(this));
 
         binding.standardSetupOption.setOnClickListener(v -> {
-            if (downloadBootstrapsCommand.isEmpty()) {
-                DialogUtils.twoDialog(SetupWizard2Activity.this, getString(R.string.oops),
-                        getString(R.string.this_option_is_temporarily_unavailable_because_the_server_cannot_be_connected),
-                        getString(R.string.try_again),
-                        getString(R.string.ok),
-                        true, R.drawable.warning_48px,
-                        true,
-                        this::getDataForStandardSetup,
-                        null,
-                        null);
-            } else {
-                isCustomSetupMode = false;
-                startSetup();
+            File localFile = findLocalBootstrapFile();
+            if (localFile != null) {
+                uiController(STEP_INSTALLING_PACKAGES);
+                new Thread(() -> {
+                    try {
+                        if (!localFile.getAbsolutePath().equals(tarPath)) {
+                            File dest = new File(tarPath);
+                            if (dest.getParentFile() != null && !dest.getParentFile().exists()) {
+                                dest.getParentFile().mkdirs();
+                            }
+                            FileUtils.copyFile(localFile.getAbsolutePath(), dest.getParent(), dest.getName());
+                        }
+                        runOnUiThread(() -> {
+                            isCustomSetupMode = true;
+                            startSetup();
+                        });
+                    } catch (Exception e) {
+                        Log.e("SetupWizard2Activity", "Failed to use local bootstrap file", e);
+                        runOnUiThread(() -> {
+                            if (downloadBootstrapsCommand.isEmpty()) {
+                                applyDefaultBootstrapLink();
+                            }
+                            isCustomSetupMode = false;
+                            startSetup();
+                        });
+                    }
+                }).start();
+                return;
             }
 
+            if (downloadBootstrapsCommand.isEmpty()) {
+                applyDefaultBootstrapLink();
+            }
+            isCustomSetupMode = false;
+            startSetup();
         });
 
         binding.customSetupOption.setOnClickListener(v -> bootstrapFilePicker.launch("*/*"));
@@ -395,12 +416,51 @@ public class SetupWizard2Activity extends AppCompatActivity {
         });
     }
 
+    private File findLocalBootstrapFile() {
+        String abi = Build.SUPPORTED_ABIS[0];
+        String[] candidatePaths = new String[]{
+                "/sdcard/cache/vectras-vm-" + abi + ".tar.gz",
+                "/sdcard/cache/vectras-vm-arm64-v8a.tar.gz",
+                "/sdcard/cache/base-vectras-vm-arm64-v8a.tar.gz",
+                "/sdcard/cache/vectras-vm-x86_64.tar.gz",
+                "/sdcard/Download/vectras-vm-" + abi + ".tar.gz",
+                "/sdcard/Download/vectras-vm-arm64-v8a.tar.gz",
+                "/sdcard/Download/vectras-vm-x86_64.tar.gz",
+                "/sdcard/Documents/VectrasVM/vectras-vm-" + abi + ".tar.gz",
+                "/sdcard/Documents/VectrasVM/vectras-vm-arm64-v8a.tar.gz",
+                getExternalFilesDir("data") != null ? getExternalFilesDir("data").getAbsolutePath() + "/vectras-vm-" + abi + ".tar.gz" : null,
+                getExternalFilesDir("data") != null ? getExternalFilesDir("data").getAbsolutePath() + "/vectras-vm-arm64-v8a.tar.gz" : null,
+                getExternalFilesDir("data") != null ? getExternalFilesDir("data").getAbsolutePath() + "/data.tar.gz" : null
+        };
+        for (String path : candidatePaths) {
+            if (path == null) continue;
+            File file = new File(path);
+            if (file.exists() && file.isFile() && file.length() > 10 * 1024 * 1024) {
+                return file;
+            }
+        }
+        return null;
+    }
+
+    private void applyDefaultBootstrapLink() {
+        if (DeviceUtils.isArm()) {
+            bootstrapFileLink = DeviceUtils.is64bit()
+                    ? "https://github.com/mininxd/linux-vm/releases/download/v1.0.0/vectras-vm-arm64-v8a.tar.gz"
+                    : "https://archive.org/download/qemu-9-2-4-3dfx-for-vectras-vm-nbab/base-nosve-vectras-vm-arm64-v8a.tar.gz";
+        } else {
+            bootstrapFileLink = DeviceUtils.is64bit()
+                    ? "https://github.com/xoureldeen/Vectras-VM-Android/releases/download/v2.9.3/vectras-vm-x86_64.tar.gz"
+                    : "https://archive.org/download/qemu-9-2-4-3dfx-for-vectras-vm-nbab/base-vectras-vm-x86_64.tar.gz";
+        }
+        downloadBootstrapsCommand = " aria2c -x 4 --async-dns=false --disable-ipv6 --check-certificate=false -o setup.tar.gz " + bootstrapFileLink;
+    }
+
     private void getDataForStandardSetup() {
         uiController(STEP_GETTING_DATA);
 
         Retrofit2Utils.get(AppConfig.bootstrapfileslink, ((isSuccess, body, status, error) -> {
-            if (isSuccess) {
-                if (JSONUtils.isValidFromString(body)) {
+            if (isSuccess && JSONUtils.isValidFromString(body)) {
+                try {
                     HashMap<String, Object> mmap;
                     mmap = new Gson().fromJson(body, new TypeToken<HashMap<String, Object>>() {
                     }.getType());
@@ -411,19 +471,23 @@ public class SetupWizard2Activity extends AppCompatActivity {
                             bootstrapFileLink = Objects.requireNonNull(mmap.get(DeviceUtils.is64bit() ? "amd64" : "x86")).toString();
                         }
                         downloadBootstrapsCommand = " aria2c -x 4 --async-dns=false --disable-ipv6 --check-certificate=false -o setup.tar.gz " + bootstrapFileLink;
-                    }
-                }
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    if (ACTION == ACTION_SYSTEM_UPDATE) {
-                        startSetup();
                     } else {
-                        uiController(STEP_SETUP_OPTIONS);
+                        applyDefaultBootstrapLink();
                     }
-                }, 1000);
+                } catch (Exception e) {
+                    applyDefaultBootstrapLink();
+                }
             } else {
-                new Handler(Looper.getMainLooper()).postDelayed(() -> uiController(STEP_SETUP_OPTIONS), 1000);
-                Log.e("SetupWizard2Activity", "getDataForStandardSetup: " + error);
+                applyDefaultBootstrapLink();
+                Log.e("SetupWizard2Activity", "getDataForStandardSetup fallback used: " + error);
             }
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (ACTION == ACTION_SYSTEM_UPDATE) {
+                    startSetup();
+                } else {
+                    uiController(STEP_SETUP_OPTIONS);
+                }
+            }, 1000);
         }));
     }
 
@@ -521,7 +585,8 @@ public class SetupWizard2Activity extends AppCompatActivity {
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) {
                     String abi = Build.SUPPORTED_ABIS[0];
-                    if (FileUtils.getFileNameFromUri(this, uri).endsWith(abi + ".tar.gz")) {
+                    String fileName = FileUtils.getFileNameFromUri(this, uri);
+                    if (fileName.endsWith(abi + ".tar.gz") || fileName.endsWith(".tar.gz")) {
                         uiController(STEP_INSTALLING_PACKAGES);
                         new Thread(() -> {
                             try {
