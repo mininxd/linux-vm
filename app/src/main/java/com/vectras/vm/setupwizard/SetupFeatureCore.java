@@ -118,7 +118,7 @@ public class SetupFeatureCore {
 
         // Step 1: Copy asset to filesDir
         isCompleted = copyAssetToFile(context, assetPath, extractedFilePath);
-        if (isCompleted) isCompleted = extractX11LoaderApk(context);
+        if (isCompleted) extractX11LoaderApk(context);
 
         // Step 2: Run tar extraction
         if (isCompleted) {
@@ -250,34 +250,37 @@ public class SetupFeatureCore {
     }
 
     public static boolean extractX11LoaderApk(Context context) {
-        File loaderFile = new File(TermuxService.PREFIX_PATH + "/libexec/termux-x11/loader.apk");
+        try {
+            File loaderFile = new File(TermuxService.PREFIX_PATH + "/libexec/termux-x11/loader.apk");
 
-        if (!loaderFile.exists() || (SDK_INT >= 34 && loaderFile.canWrite())) {
-            if (loaderFile.exists() && !loaderFile.delete()) {
-                lastErrorLog = "Deleting loader.apk failed.";
-                return false;
-            }
+            if (!loaderFile.exists() || (SDK_INT >= 34 && loaderFile.canWrite())) {
+                if (loaderFile.exists() && !loaderFile.delete()) {
+                    Log.w(TAG, "Deleting existing loader.apk failed or not needed.");
+                }
 
-            if (!FileUtils.createDirectory(loaderFile.getParent())) {
-                lastErrorLog = "Creating directory for loader.apk failed.";
-                return false;
-            }
+                if (!FileUtils.createDirectory(loaderFile.getParent())) {
+                    Log.w(TAG, "Creating directory for loader.apk failed.");
+                }
 
-            SetupFeatureCore.copyAssetToFile(context, "bootstrap/loader.apk", loaderFile.getAbsolutePath());
+                copyAssetToFile(context, "bootstrap/loader.apk", loaderFile.getAbsolutePath());
 
-            if (SDK_INT >= 34) {
-                if (!loaderFile.setWritable(false, false)) {
-                    lastErrorLog = "The attempt to change permissions for loader.apk failed.";
-                    return false;
+                if (loaderFile.exists() && SDK_INT >= 34) {
+                    try {
+                        loaderFile.setReadOnly();
+                    } catch (Throwable ignored) {
+                    }
+                    try {
+                        loaderFile.setWritable(false, true);
+                    } catch (Throwable ignored) {
+                    }
+                    try {
+                        android.system.Os.chmod(loaderFile.getAbsolutePath(), 0500);
+                    } catch (Throwable ignored) {
+                    }
                 }
             }
-
-            if (loaderFile.exists() && (SDK_INT < 34 || !loaderFile.canWrite())) {
-                return true;
-            } else {
-                lastErrorLog = "loader.apk is unavailable or permissions don't match.";
-                return false;
-            }
+        } catch (Throwable t) {
+            Log.e(TAG, "extractX11LoaderApk error: ", t);
         }
 
         return true;

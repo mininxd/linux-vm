@@ -1,11 +1,16 @@
 //file:noinspection UnnecessaryQualifiedReference, GrDeprecatedAPIUsage
 apply plugin: 'com.android.application'
 
-def appSigningConfig = project(':app').android.signingConfigs.debug
+def appSigningConfig = project(':app').android.signingConfigs.release ?: project(':app').android.signingConfigs.debug
 
 android {
 
     buildTypes {
+        release {
+            if (appSigningConfig != null) {
+                signingConfig appSigningConfig
+            }
+        }
         debug {
             if (appSigningConfig != null) {
                 signingConfig appSigningConfig
