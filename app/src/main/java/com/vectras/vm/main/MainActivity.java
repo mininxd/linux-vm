@@ -218,9 +218,6 @@ public class MainActivity extends AppCompatActivity implements RomStoreFragment.
             int id = item.getItemId();
 
             if (id == currentBottomBarSelectedItemId) {
-                if (id == R.id.item_romstore || id == R.id.item_softwarestore) {
-                    if (bindingContent.searchbar.isEnabled()) binding.searchview.show();
-                }
                 return true;
             }
 
@@ -237,45 +234,25 @@ public class MainActivity extends AppCompatActivity implements RomStoreFragment.
                 bindingContent.efabCreate.setVisibility(View.VISIBLE);
                 bindingContent.searchbar.setHint(getText(R.string.home));
                 bindingContent.searchbar.setEnabled(false);
+            } else if (id == R.id.item_monitor) {
+                fragmentTransaction.hide(vms);
+                Fragment selectedFragment = new SystemMonitorFragment();
+                selectedTag = TAG_MONITOR_FRAGMENT;
+                bindingContent.efabCreate.setVisibility(View.GONE);
+                bindingContent.searchbar.setHint(getText(R.string.system_monitor));
+                bindingContent.searchbar.setEnabled(false);
+
+                if (!isInVmsFragment && currentFragment != null) fragmentTransaction.remove(currentFragment);
+                fragmentTransaction.add(bindingContent.containerView.getId(), selectedFragment, selectedTag);
+
+                currentFragment = selectedFragment;
             } else {
                 fragmentTransaction.hide(vms);
-                Fragment selectedFragment;
-
-                if (id == R.id.item_romstore) {
-                    selectedFragment = new RomStoreFragment();
-                    selectedTag = TAG_ROM_STORE_FRAGMENT;
-                    bindingContent.efabCreate.setVisibility(View.GONE);
-                    bindingContent.searchbar.setEnabled(true);
-                    bindingContent.searchbar.setHint(getText(R.string.search));
-                    currentSearchMode = SEARCH_ROM_STORE;
-                    adapterRomStore = new RomStoreHomeAdpater(this, listSearchData, true);
-                    binding.rvSearch.setAdapter(adapterRomStore);
-                    adapterRomStoreSearchSuggestions = new RomStoreHomeAdpater(this, getSearchSuggestionList(), true);
-                    binding.rvSearchSuggestion.setAdapter(adapterRomStoreSearchSuggestions);
-                } else if (id == R.id.item_softwarestore) {
-                    selectedFragment = new SoftwareStoreFragment();
-                    selectedTag = TAG_SOFTWARE_STORE_FRAGMENT;
-                    bindingContent.efabCreate.setVisibility(View.GONE);
-                    bindingContent.searchbar.setEnabled(true);
-                    bindingContent.searchbar.setHint(getText(R.string.search));
-                    currentSearchMode = SEARCH_SOFTWARE_STORE;
-                    adapterSoftwareStore = new SoftwareStoreHomeAdapter(this, listSearchData, true);
-                    binding.rvSearch.setAdapter(adapterSoftwareStore);
-                    adapterSoftwareStoreSearchSuggestions = new SoftwareStoreHomeAdapter(this, getSearchSuggestionList(), true);
-                    binding.rvSearchSuggestion.setAdapter(adapterSoftwareStoreSearchSuggestions);
-                } else if (id == R.id.item_monitor) {
-                    selectedFragment = new SystemMonitorFragment();
-                    selectedTag = TAG_MONITOR_FRAGMENT;
-                    bindingContent.efabCreate.setVisibility(View.GONE);
-                    bindingContent.searchbar.setHint(getText(R.string.system_monitor));
-                    bindingContent.searchbar.setEnabled(false);
-                } else {
-                    selectedFragment = new VmsFragment();
-                    selectedTag = TAG_VMS_FRAGMENT;
-                    bindingContent.efabCreate.setVisibility(View.VISIBLE);
-                    bindingContent.searchbar.setHint(getText(R.string.home));
-                    bindingContent.searchbar.setEnabled(false);
-                }
+                Fragment selectedFragment = new VmsFragment();
+                selectedTag = TAG_VMS_FRAGMENT;
+                bindingContent.efabCreate.setVisibility(View.VISIBLE);
+                bindingContent.searchbar.setHint(getText(R.string.home));
+                bindingContent.searchbar.setEnabled(false);
 
                 if (!isInVmsFragment && currentFragment != null) fragmentTransaction.remove(currentFragment);
                 fragmentTransaction.add(bindingContent.containerView.getId(), selectedFragment, selectedTag);
@@ -474,11 +451,7 @@ public class MainActivity extends AppCompatActivity implements RomStoreFragment.
 
         currentBottomBarSelectedItemId = bindingContent.bottomNavigation.getSelectedItemId();
 
-        if (currentBottomBarSelectedItemId == R.id.item_romstore) {
-            currentFragment = fm.findFragmentByTag(TAG_ROM_STORE_FRAGMENT);
-        } else if (currentBottomBarSelectedItemId == R.id.item_softwarestore) {
-            currentFragment = fm.findFragmentByTag(TAG_SOFTWARE_STORE_FRAGMENT);
-        } else if (currentBottomBarSelectedItemId == R.id.item_monitor) {
+        if (currentBottomBarSelectedItemId == R.id.item_monitor) {
             currentFragment = fm.findFragmentByTag(TAG_MONITOR_FRAGMENT);
         } else if (currentBottomBarSelectedItemId == R.id.item_home) {
             currentFragment = fm.findFragmentByTag(TAG_VMS_FRAGMENT);

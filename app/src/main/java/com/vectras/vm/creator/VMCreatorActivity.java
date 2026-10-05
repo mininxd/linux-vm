@@ -27,6 +27,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.vectras.qemu.MainSettingsManager;
+import com.vectras.qemu.utils.RamInfo;
 import com.vectras.vm.AppConfig;
 import com.vectras.vm.R;
 import com.vectras.vm.creator.configs.ListManager;
@@ -1038,7 +1039,6 @@ public class VMCreatorActivity extends AppCompatActivity {
 
         if (VmFileManager.isCreateCommandConfigFileExists(vmID)) {
             FileUtils.writeToFile(VmFileManager.getPath(vmID), VmFileManager.CREATE_COMMAND_CONFIG_FILE_NAME, VmFileManager.textMarkToPath(this, vmID, FileUtils.readAFile(VmFileManager.getCreateCommandConfigFile(vmID))));
-            checkCreateCommandConfig();
         }
 
         if (VmFileManager.isSnapshotShExists(vmID)) {
