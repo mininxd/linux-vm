@@ -96,9 +96,7 @@ public class SetupWizard2Activity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (currentStep > STEP_JOIN_COMMUNITY) {
-                    uiControllerFinalSteps(currentStep - 1);
-                } else if (!isExecutingCommand) {
+                if (!isExecutingCommand) {
                     setEnabled(false);
                     getOnBackPressedDispatcher().onBackPressed();
                 }
@@ -145,43 +143,7 @@ public class SetupWizard2Activity extends AppCompatActivity {
 
         binding.btnAllowPermission.setOnClickListener(v -> PermissionUtils.requestStoragePermission(this));
 
-        binding.standardSetupOption.setOnClickListener(v -> {
-            File localFile = findLocalBootstrapFile();
-            if (localFile != null) {
-                uiController(STEP_INSTALLING_PACKAGES);
-                new Thread(() -> {
-                    try {
-                        if (!localFile.getAbsolutePath().equals(tarPath)) {
-                            File dest = new File(tarPath);
-                            if (dest.getParentFile() != null && !dest.getParentFile().exists()) {
-                                dest.getParentFile().mkdirs();
-                            }
-                            FileUtils.copyFile(localFile.getAbsolutePath(), dest.getParent(), dest.getName());
-                        }
-                        runOnUiThread(() -> {
-                            isCustomSetupMode = true;
-                            startSetup();
-                        });
-                    } catch (Exception e) {
-                        Log.e("SetupWizard2Activity", "Failed to use local bootstrap file", e);
-                        runOnUiThread(() -> {
-                            if (downloadBootstrapsCommand.isEmpty()) {
-                                applyDefaultBootstrapLink();
-                            }
-                            isCustomSetupMode = false;
-                            startSetup();
-                        });
-                    }
-                }).start();
-                return;
-            }
-
-            if (downloadBootstrapsCommand.isEmpty()) {
-                applyDefaultBootstrapLink();
-            }
-            isCustomSetupMode = false;
-            startSetup();
-        });
+        binding.standardSetupOption.setOnClickListener(v -> proceedToSetup());
 
         binding.customSetupOption.setOnClickListener(v -> bootstrapFilePicker.launch("*/*"));
 
@@ -193,8 +155,6 @@ public class SetupWizard2Activity extends AppCompatActivity {
             if (ACTION == ACTION_SYSTEM_UPDATE) {
                 uiController(STEP_SYSTEM_UPDATE);
                 binding.btnSkipSystemUpdate.setVisibility(View.GONE);
-            } else if (isLibProotError) {
-                IntentUtils.openTelegramLink(this);
             } else if (SetupFeatureCore.isInstalledSystemFiles(this)) {
                 getDataForStandardSetup();
             } else {
@@ -203,23 +163,15 @@ public class SetupWizard2Activity extends AppCompatActivity {
         });
 
         //Final steps
-        bindingFinalSteps.tvLater.setOnClickListener(v -> uiControllerFinalSteps(currentStep == STEP_JOIN_COMMUNITY ? STEP_FINISH : currentStep + 1));
+        bindingFinalSteps.tvLater.setVisibility(View.GONE);
+        bindingFinalSteps.tvLater.setOnClickListener(v -> {
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+        });
 
         bindingFinalSteps.btnContinue.setOnClickListener(v -> {
-            if (currentStep == STEP_JOIN_COMMUNITY) {
-                uiControllerFinalSteps(STEP_FINISH);
-                IntentUtils.openTelegramLink(this);
-                //Don't show join Telegram dialog again
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-                SharedPreferences.Editor edit = prefs.edit();
-                edit.putBoolean("tgDialog", true);
-                edit.apply();
-            } else if (currentStep == STEP_PATERON) {
-                uiControllerFinalSteps(STEP_FINISH);
-            } else {
-                startActivity(new Intent(this, MainActivity.class));
-                finish();
-            }
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
         });
 
 
@@ -292,12 +244,12 @@ public class SetupWizard2Activity extends AppCompatActivity {
                 binding.ivErrorLarge.setImageResource(R.drawable.disc_full_100px);
                 binding.tvErrorTitle.setText(getString(R.string.not_enough_storage_space));
                 binding.tvErrorSubtitle.setText(getString(R.string.not_enough_storage_to_set_up_content));
-                binding.btnTryAgain.setText(getString(R.string.join_our_community));
+                binding.btnTryAgain.setText(getString(R.string.try_again));
             } else if (isLibProotError) {
                 binding.ivErrorLarge.setImageResource(R.drawable.error_96px);
                 binding.tvErrorTitle.setText(getString(R.string.vectras_vm_cannot_run_on_this_device));
                 binding.tvErrorSubtitle.setText(getString(R.string.a_serious_problem_has_occurred));
-                binding.btnTryAgain.setText(getString(R.string.join_our_community));
+                binding.btnTryAgain.setText(getString(R.string.try_again));
             } else if (isServerError || aria2Error) {
                 binding.ivErrorLarge.setImageResource(R.drawable.android_wifi_3_bar_alert_100px);
                 binding.tvErrorTitle.setText(getString(R.string.unable_to_connect_to_server));
@@ -307,7 +259,7 @@ public class SetupWizard2Activity extends AppCompatActivity {
                 binding.tvErrorTitle.setText(getString(R.string.something_went_wrong));
                 binding.tvErrorSubtitle.setText(getString(R.string.the_setup_could_not_be_completed_and_below_is_the_log));
             }
-        } else if (step == STEP_JOIN_COMMUNITY) {
+        } else if (step == STEP_JOIN_COMMUNITY || step == STEP_FINISH) {
             bindingFinalSteps.main.setVisibility(View.VISIBLE);
         }
 
@@ -364,25 +316,11 @@ public class SetupWizard2Activity extends AppCompatActivity {
 
         bindingFinalSteps.linearcommunity.setVisibility(View.GONE);
         bindingFinalSteps.lineardonate.setVisibility(View.GONE);
-        bindingFinalSteps.linearwelcomehome.setVisibility(View.GONE);
+        bindingFinalSteps.linearwelcomehome.setVisibility(View.VISIBLE);
+        bindingFinalSteps.tvLater.setVisibility(View.GONE);
+        bindingFinalSteps.btnContinue.setText(getString(R.string.done));
 
-        TransitionManager.beginDelayedTransition(bindingFinalSteps.mainContent);
-
-        if (step == STEP_PATERON) {
-            step = STEP_FINISH;
-        }
-
-        if (step == STEP_JOIN_COMMUNITY) {
-            bindingFinalSteps.linearcommunity.setVisibility(View.VISIBLE);
-            bindingFinalSteps.tvLater.setVisibility(View.VISIBLE);
-            bindingFinalSteps.btnContinue.setText(getString(R.string.join));
-        } else if (step == STEP_FINISH) {
-            bindingFinalSteps.linearwelcomehome.setVisibility(View.VISIBLE);
-            bindingFinalSteps.tvLater.setVisibility(View.GONE);
-            bindingFinalSteps.btnContinue.setText(getString(R.string.done));
-        }
-
-        currentStep = step;
+        currentStep = STEP_FINISH;
     }
 
     private void extractSystemFiles() {
@@ -455,7 +393,52 @@ public class SetupWizard2Activity extends AppCompatActivity {
         downloadBootstrapsCommand = " aria2c -x 4 --async-dns=false --disable-ipv6 --check-certificate=false -o setup.tar.gz " + bootstrapFileLink;
     }
 
+    private void proceedToSetup() {
+        File localFile = findLocalBootstrapFile();
+        if (localFile != null) {
+            uiController(STEP_INSTALLING_PACKAGES);
+            new Thread(() -> {
+                try {
+                    if (!localFile.getAbsolutePath().equals(tarPath)) {
+                        File dest = new File(tarPath);
+                        if (dest.getParentFile() != null && !dest.getParentFile().exists()) {
+                            dest.getParentFile().mkdirs();
+                        }
+                        FileUtils.copyFile(localFile.getAbsolutePath(), dest.getParent(), dest.getName());
+                    }
+                    runOnUiThread(() -> {
+                        isCustomSetupMode = true;
+                        startSetup();
+                    });
+                } catch (Exception e) {
+                    Log.e("SetupWizard2Activity", "Failed to use local bootstrap file", e);
+                    runOnUiThread(() -> {
+                        if (downloadBootstrapsCommand.isEmpty()) {
+                            applyDefaultBootstrapLink();
+                        }
+                        isCustomSetupMode = false;
+                        startSetup();
+                    });
+                }
+            }).start();
+            return;
+        }
+
+        if (downloadBootstrapsCommand.isEmpty()) {
+            applyDefaultBootstrapLink();
+        }
+        isCustomSetupMode = false;
+        startSetup();
+    }
+
     private void getDataForStandardSetup() {
+        applyDefaultBootstrapLink();
+        File localFile = findLocalBootstrapFile();
+        if (localFile != null) {
+            proceedToSetup();
+            return;
+        }
+
         uiController(STEP_GETTING_DATA);
 
         Retrofit2Utils.get(AppConfig.bootstrapfileslink, ((isSuccess, body, status, error) -> {
@@ -471,8 +454,6 @@ public class SetupWizard2Activity extends AppCompatActivity {
                             bootstrapFileLink = Objects.requireNonNull(mmap.get(DeviceUtils.is64bit() ? "amd64" : "x86")).toString();
                         }
                         downloadBootstrapsCommand = " aria2c -x 4 --async-dns=false --disable-ipv6 --check-certificate=false -o setup.tar.gz " + bootstrapFileLink;
-                    } else {
-                        applyDefaultBootstrapLink();
                     }
                 } catch (Exception e) {
                     applyDefaultBootstrapLink();
@@ -481,13 +462,7 @@ public class SetupWizard2Activity extends AppCompatActivity {
                 applyDefaultBootstrapLink();
                 Log.e("SetupWizard2Activity", "getDataForStandardSetup fallback used: " + error);
             }
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                if (ACTION == ACTION_SYSTEM_UPDATE) {
-                    startSetup();
-                } else {
-                    uiController(STEP_SETUP_OPTIONS);
-                }
-            }, 1000);
+            new Handler(Looper.getMainLooper()).postDelayed(this::proceedToSetup, 300);
         }));
     }
 
@@ -659,10 +634,8 @@ public class SetupWizard2Activity extends AppCompatActivity {
             MainSettingsManager.setStandardSetupVersion(this, AppConfig.standardSetupVersion);
             MainSettingsManager.setCoreSetupVersion(this, AppConfig.coreSetupVersion);
             MainSettingsManager.setsetUpWithManualSetupBefore(this, isCustomSetupMode);
-            uiController(STEP_JOIN_COMMUNITY);
-            if (ACTION == ACTION_SYSTEM_UPDATE) {
-                uiControllerFinalSteps(STEP_FINISH);
-            }
+            uiController(STEP_FINISH);
+            uiControllerFinalSteps(STEP_FINISH);
         } else if (newLog.contains("libproot.so --help") || newLog.contains("/bin/sh: can't fork:")) {
             isLibProotError = true;
         } else if (newLog.contains("not complete: /root/setup.tar.gz")) {

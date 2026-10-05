@@ -143,6 +143,18 @@
                 <data android:pathPattern=".*\\..*\\.cvbi" />
                 <data android:pathPattern=".*\\..*\\..*\\.cvbi" />
                 <data android:pathPattern=".*\\..*\\..*\\..*\\.cvbi" />
+                <data android:pathPattern=".*\\.iso" />
+                <data android:pathPattern=".*\\..*\\.iso" />
+                <data android:pathPattern=".*\\..*\\..*\\.iso" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.iso" />
+                <data android:pathPattern=".*\\.qcow2" />
+                <data android:pathPattern=".*\\..*\\.qcow2" />
+                <data android:pathPattern=".*\\..*\\..*\\.qcow2" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.qcow2" />
+                <data android:pathPattern=".*\\.img" />
+                <data android:pathPattern=".*\\..*\\.img" />
+                <data android:pathPattern=".*\\..*\\..*\\.img" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.img" />
             </intent-filter>
         </activity>
         <activity

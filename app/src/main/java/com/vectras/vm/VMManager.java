@@ -884,7 +884,7 @@ public class VMManager {
 
     public static void setIconWithName(ImageView imageview, String name) {
         String itemName = name.toLowerCase();
-        if (itemName.contains("linux") || itemName.contains("ubuntu") || itemName.contains("debian") || itemName.contains("arch") || itemName.contains("kali")) {
+        if (itemName.contains("linux") || itemName.contains("ubuntu") || itemName.contains("debian") || itemName.contains("arch") || itemName.contains("kali") || itemName.contains("mint") || itemName.contains("pop") || itemName.contains("fedora") || itemName.contains("centos") || itemName.contains("suse") || itemName.contains("manjaro") || itemName.contains("alpine") || itemName.contains("zorin")) {
             imageview.setImageResource(R.drawable.linux);
         } else if (itemName.contains("windows")) {
             imageview.setImageResource(R.drawable.windows);

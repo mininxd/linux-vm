@@ -330,6 +330,7 @@ public class FilePickerDialog extends DialogFragment {
     public static final int FIT_PICK_DISK_FILE_MODE = 20;
     public static final int FIT_PICK_OPTICAL_FILE_MODE = 21;
     public static final int FIT_PICK_FLOPPY_FILE_MODE = 22;
+    public static final int FIT_PICK_VM_IMAGE_MODE = 23;
 
     public boolean checkFitPickFileMode(String fileName) {
         if (pickType == FIT_PICK_DISK_FILE_MODE) {
@@ -338,6 +339,8 @@ public class FilePickerDialog extends DialogFragment {
             return FormatManager.isOpticalFileFormat(fileName);
         } else if (pickType == FIT_PICK_FLOPPY_FILE_MODE) {
             return FormatManager.isFloppyFileFormat(fileName);
+        } else if (pickType == FIT_PICK_VM_IMAGE_MODE) {
+            return FormatManager.isOpticalFileFormat(fileName) || FormatManager.isHardDriveFileFormat(fileName) || fileName.endsWith(".cvbi") || fileName.endsWith(".cvbi.zip");
         } else {
             return false;
         }

@@ -19,6 +19,7 @@ import java.net.URLDecoder;
 import java.util.Objects;
 
 import com.vectras.vm.creator.VMCreatorActivity;
+import com.vectras.vm.manager.FormatManager;
 import com.vectras.vm.utils.UIUtils;
 import com.vectras.vm.utils.PermissionUtils;
 
@@ -56,38 +57,52 @@ public class RomReceiverActivity extends AppCompatActivity {
                 Uri uri = intent.getData();
 
                 if (Intent.ACTION_VIEW.equals(action) && uri != null) {
-                    if (Objects.requireNonNull(uri.getPath()).endsWith(".cvbi")) {
+                    String filePath = getFilePath(uri);
+                    String fileName = uri.getLastPathSegment();
+                    if (filePath != null && !filePath.isEmpty()) {
+                        fileName = new File(filePath).getName();
+                    }
+                    if (fileName == null) fileName = "";
+
+                    if (fileName.endsWith(".cvbi") || fileName.endsWith(".cvbi.zip") || FormatManager.isOpticalFileFormat(fileName) || FormatManager.isHardDriveFileFormat(fileName)) {
                         Intent _intent = new Intent();
                         _intent.setClass(this, VMCreatorActivity.class);
                         _intent.putExtra("addromnow", "");
                         _intent.putExtra("romextra", "");
                         _intent.putExtra("romname", "");
                         _intent.putExtra("romicon", "");
-                        _intent.putExtra("romfilename", ".cvbi");
-                        _intent.putExtra("rompath", getFilePath(uri));
+                        _intent.putExtra("romfilename", fileName);
+                        _intent.putExtra("rompath", filePath != null ? filePath : "");
                         _intent.putExtra("romuri", uri.toString());
                         startActivity(_intent);
                         Log.i("ReceiveRomFileActivity", uri.toString());
-                        Log.i("ReceiveRomFileActivity", Objects.requireNonNull(getFilePath(uri)));
+                        if (filePath != null) Log.i("ReceiveRomFileActivity", filePath);
                     } else {
                         Toast.makeText(RomReceiverActivity.this, getResources().getString(R.string.format_not_supported_please_select_file_with_format_cvbi), Toast.LENGTH_LONG).show();
                     }
                 } else if (Intent.ACTION_SEND.equals(action)) {
                     uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
                     if (uri != null) {
-                        if (Objects.requireNonNull(uri.getPath()).endsWith(".cvbi")) {
+                        String filePath = getFilePath(uri);
+                        String fileName = uri.getLastPathSegment();
+                        if (filePath != null && !filePath.isEmpty()) {
+                            fileName = new File(filePath).getName();
+                        }
+                        if (fileName == null) fileName = "";
+
+                        if (fileName.endsWith(".cvbi") || fileName.endsWith(".cvbi.zip") || FormatManager.isOpticalFileFormat(fileName) || FormatManager.isHardDriveFileFormat(fileName)) {
                             Intent _intent = new Intent();
                             _intent.setClass(this, VMCreatorActivity.class);
                             _intent.putExtra("addromnow", "");
                             _intent.putExtra("romextra", "");
                             _intent.putExtra("romname", "");
                             _intent.putExtra("romicon", "");
-                            _intent.putExtra("romfilename", ".cvbi");
-                            _intent.putExtra("rompath", getFilePath(uri));
+                            _intent.putExtra("romfilename", fileName);
+                            _intent.putExtra("rompath", filePath != null ? filePath : "");
                             _intent.putExtra("romuri", uri.toString());
                             startActivity(_intent);
                             Log.i("ReceiveRomFileActivity", uri.toString());
-                            Log.i("ReceiveRomFileActivity", Objects.requireNonNull(getFilePath(uri)));
+                            if (filePath != null) Log.i("ReceiveRomFileActivity", filePath);
                         } else {
                             Toast.makeText(RomReceiverActivity.this, getResources().getString(R.string.format_not_supported_please_select_file_with_format_cvbi), Toast.LENGTH_LONG).show();
                         }

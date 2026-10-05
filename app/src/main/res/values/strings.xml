@@ -203,7 +203,7 @@
     <string name="unable_to_connect_to_server">Unable to connect to server.</string>
     <string name="join_our_community">Join our community</string>
     <string name="a_serious_problem_has_occurred">A serious problem has occurred! This problem is caused by the CPU or Android operating system on your device. You can join our community to learn more.</string>
-    <string name="format_not_supported_please_select_file_with_format_cvbi">Format not supported, please select file with format cvbi.</string>
+    <string name="format_not_supported_please_select_file_with_format_cvbi">Format not supported. Please select an ISO image, virtual disk (.qcow2, .vdi, .vhd), or .cvbi file.</string>
     <string name="error_CR_CVBI1">A problem has occurred and cannot continue because the cbvi file was not found. Error code: CR_CVBI1.</string>
     <string name="error_CR_CVBI2">An error has occurred. Extraction was successful but the cvbi file does not contain information about this ROM so some default settings will be used. Error code: CR_CVBI2.</string>
     <string name="from">From</string>
@@ -307,12 +307,12 @@
     <string name="note_for_selecting_aarch64">You can run Windows, Linux and other operating systems intended for ARM.</string>
     <string name="note_for_selecting_i386">You can run older x86 operating systems with greater compatibility than x86_64.</string>
     <string name="note_for_selecting_ppc">You can run older versions of Mac OS and other operating systems intended for the PowerPC architecture.</string>
-    <string name="note_for_selecting_import">You can import now by selecting the file in cvbi format.</string>
+    <string name="note_for_selecting_import">You can import now by selecting an ISO image, virtual disk, or CVBI file.</string>
     <string name="note_for_selecting_qemu">Learn more about this open source emulator.</string>
     <string name="create_command">Param Notebook</string>
     <string name="note_for_selecting_create_command">Create new virtual machines for Vectras VM with easier customization.</string>
     <string name="import_or_choose_an_architecture_to_start_creating">Import or choose an architecture to start creating.</string>
-    <string name="set_arch_universal_note">You can drag and drop cvbi file to Import card to import.</string>
+    <string name="set_arch_universal_note">Select an ISO image (Ubuntu, Mint, Pop!_OS), virtual disk, or CVBI file to import.</string>
     <string name="copy">Copy</string>
     <string name="search">Search</string>
     <string name="no_matching_results_found">No matching results found.</string>

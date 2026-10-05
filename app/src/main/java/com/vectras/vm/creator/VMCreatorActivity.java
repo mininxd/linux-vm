@@ -317,19 +317,19 @@ public class VMCreatorActivity extends AppCompatActivity {
                     handleThumbnail(Uri.parse(getIntent().getStringExtra("romicon")));
                 }
 
-                if (Objects.requireNonNull(getIntent().getStringExtra("romfilename")).endsWith(".cvbi")) {
-                    importRom(
-                            getIntent().hasExtra("romuri") ?
-                                    Uri.parse(getIntent().getStringExtra("romuri")) :
-                                    null, Objects.requireNonNull(getIntent().getStringExtra("rompath")),
-                            Objects.requireNonNull(getIntent().getStringExtra("romfilename")));
+                String rFileName = Objects.requireNonNull(getIntent().getStringExtra("romfilename"));
+                String rPath = getIntent().hasExtra("rompath") ? Objects.requireNonNull(getIntent().getStringExtra("rompath")) : "";
+                Uri rUri = getIntent().hasExtra("romuri") ? Uri.parse(getIntent().getStringExtra("romuri")) : null;
+
+                if (rFileName.endsWith(".cvbi") || rFileName.endsWith(".cvbi.zip") || FormatManager.isOpticalFileFormat(rFileName) || FormatManager.isHardDriveFileFormat(rFileName)) {
+                    importRom(rUri, rPath, rFileName);
                 } else {
                     addromnowdone = true;
-                    if (!Objects.requireNonNull(getIntent().getStringExtra("rompath")).isEmpty()) {
-                        handleDiskFile(Uri.fromFile(new File((Objects.requireNonNull(getIntent().getStringExtra("rompath"))))), false);
+                    if (!rPath.isEmpty()) {
+                        handleDiskFile(Uri.fromFile(new File(rPath)), false);
                     }
                     if (!Objects.requireNonNull(getIntent().getStringExtra("addtodrive")).isEmpty()) {
-                        current.itemPath =  VmFileManager.getPath(vmID, getIntent().getStringExtra("romfilename"));
+                        current.itemPath = VmFileManager.getPath(vmID, rFileName);
                     } else {
                         current.itemPath = "";
                     }
@@ -340,7 +340,7 @@ public class VMCreatorActivity extends AppCompatActivity {
                 try {
                     if (MainSettingsManager.getBuiltInFilePicker(this)) {
                         FilePickerDialog filePickerDialog = new FilePickerDialog();
-                        filePickerDialog.pick(this, FilePickerDialog.ROM_FILE, (path -> importRom(null, path, new File(path).getName())));
+                        filePickerDialog.pick(this, FilePickerDialog.FIT_PICK_VM_IMAGE_MODE, (path -> importRom(null, path, new File(path).getName())));
                     } else {
                         cvbiPicker.launch("*/*");
                     }
@@ -838,8 +838,210 @@ public class VMCreatorActivity extends AppCompatActivity {
     }
 
     @SuppressLint("SetTextI18n")
+    private void importIsoImage(Uri fileUri, String filePath, String fileName) {
+        if (isFinishing() || isDestroyed()) return;
+
+        createVMFolder(true);
+
+        String targetPath = (filePath != null && !filePath.isEmpty()) ? filePath : "";
+        if (targetPath.isEmpty() || !FileUtils.isFileExists(targetPath)) {
+            if (fileUri != null) {
+                targetPath = getPath(fileUri);
+            }
+        }
+
+        if ((targetPath == null || targetPath.isEmpty() || !FileUtils.isFileExists(targetPath)) && fileUri != null) {
+            showProgressDialog(getString(R.string.copying_file));
+            final String fName = fileName;
+            executor.execute(() -> {
+                try {
+                    String destPath = VmFileManager.getPath(vmID, fName);
+                    FileUtils.copyFileFromUri(this, fileUri, destPath);
+                    runOnUiThread(() -> {
+                        DialogUtils.safeDismiss(this, progressDialog);
+                        configureIsoVM(destPath, fName);
+                    });
+                } catch (Exception e) {
+                    runOnUiThread(() -> {
+                        DialogUtils.safeDismiss(this, progressDialog);
+                        DialogUtils.oopsDialog(this, getString(R.string.unable_to_copy_file_content) + ": " + e.getMessage());
+                    });
+                }
+            });
+            return;
+        }
+
+        configureIsoVM(targetPath != null ? targetPath : "", fileName);
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void configureIsoVM(String isoPath, String fileName) {
+        String cleanName = fileName;
+        int dotIndex = cleanName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            cleanName = cleanName.substring(0, dotIndex);
+        }
+        cleanName = cleanName.replace('_', ' ').replace('-', ' ').trim();
+        if (cleanName.isEmpty()) cleanName = "Linux VM";
+
+        String lowerName = fileName.toLowerCase();
+        String detectedArch;
+        if (lowerName.contains("arm64") || lowerName.contains("aarch64")) {
+            detectedArch = MainSettingsManager.ARM64_ARCH;
+        } else if ((lowerName.contains("i386") || lowerName.contains("x86") || lowerName.contains("i686")) && !lowerName.contains("64")) {
+            detectedArch = MainSettingsManager.I386_ARCH;
+        } else if (lowerName.contains("ppc") || lowerName.contains("powerpc")) {
+            detectedArch = MainSettingsManager.PPC_ARCH;
+        } else {
+            detectedArch = MainSettingsManager.X86_64_ARCH;
+        }
+
+        MainSettingsManager.setArch(this, detectedArch);
+        binding.collapsingToolbarLayout.setSubtitle(detectedArch);
+
+        setDefault();
+
+        current.itemName = cleanName;
+        binding.title.setText(cleanName);
+        VMManager.setIconWithName(binding.ivIcon, cleanName);
+
+        current.imgCdrom = isoPath;
+        current.bootFrom = 2; // Boot from CD-ROM (d)
+        current.isShowBootMenu = true;
+
+        if (MainSettingsManager.autoCreateDisk(this) && (current.itemPath == null || current.itemPath.isEmpty())) {
+            createSparseVirtualDisk();
+        }
+
+        save();
+        Toast.makeText(this, "ISO loaded: " + cleanName, Toast.LENGTH_SHORT).show();
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void importDiskImage(Uri fileUri, String filePath, String fileName) {
+        if (isFinishing() || isDestroyed()) return;
+
+        createVMFolder(true);
+
+        String targetPath = (filePath != null && !filePath.isEmpty()) ? filePath : "";
+        if (targetPath.isEmpty() || !FileUtils.isFileExists(targetPath)) {
+            if (fileUri != null) {
+                targetPath = getPath(fileUri);
+            }
+        }
+
+        if ((targetPath == null || targetPath.isEmpty() || !FileUtils.isFileExists(targetPath)) && fileUri != null) {
+            showProgressDialog(getString(R.string.copying_file));
+            final String fName = fileName;
+            executor.execute(() -> {
+                try {
+                    String destPath = VmFileManager.getPath(vmID, fName);
+                    FileUtils.copyFileFromUri(this, fileUri, destPath);
+                    runOnUiThread(() -> {
+                        DialogUtils.safeDismiss(this, progressDialog);
+                        configureDiskVM(destPath, fName);
+                    });
+                } catch (Exception e) {
+                    runOnUiThread(() -> {
+                        DialogUtils.safeDismiss(this, progressDialog);
+                        DialogUtils.oopsDialog(this, getString(R.string.unable_to_copy_file_content) + ": " + e.getMessage());
+                    });
+                }
+            });
+            return;
+        }
+
+        configureDiskVM(targetPath != null ? targetPath : "", fileName);
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void configureDiskVM(String diskPath, String fileName) {
+        String cleanName = fileName;
+        int dotIndex = cleanName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            cleanName = cleanName.substring(0, dotIndex);
+        }
+        cleanName = cleanName.replace('_', ' ').replace('-', ' ').trim();
+        if (cleanName.isEmpty()) cleanName = "Linux VM";
+
+        String lowerName = fileName.toLowerCase();
+        String detectedArch;
+        if (lowerName.contains("arm64") || lowerName.contains("aarch64")) {
+            detectedArch = MainSettingsManager.ARM64_ARCH;
+        } else if ((lowerName.contains("i386") || lowerName.contains("x86") || lowerName.contains("i686")) && !lowerName.contains("64")) {
+            detectedArch = MainSettingsManager.I386_ARCH;
+        } else if (lowerName.contains("ppc") || lowerName.contains("powerpc")) {
+            detectedArch = MainSettingsManager.PPC_ARCH;
+        } else {
+            detectedArch = MainSettingsManager.X86_64_ARCH;
+        }
+
+        MainSettingsManager.setArch(this, detectedArch);
+        binding.collapsingToolbarLayout.setSubtitle(detectedArch);
+
+        setDefault();
+
+        current.itemName = cleanName;
+        binding.title.setText(cleanName);
+        VMManager.setIconWithName(binding.ivIcon, cleanName);
+
+        current.itemPath = diskPath;
+        current.bootFrom = 1; // Boot from Hard Disk (c)
+        current.isShowBootMenu = true;
+
+        save();
+        Toast.makeText(this, "Disk loaded: " + cleanName, Toast.LENGTH_SHORT).show();
+    }
+
+    private void createSparseVirtualDisk() {
+        if (createVMFolder(true)) {
+            Terminal2 terminal2 = new Terminal2(this);
+            terminal2.setShowProgressDialog(false);
+            terminal2.execute("qemu-img create -f qcow2 " + VmFileManager.getPath(vmID, "disk.qcow2") + " 128G", new Terminal2.Terminal2Callback() {
+                @Override
+                public void onRunning(String command, String newLine) {
+                }
+
+                @Override
+                public void onFinished(String command, String log, int status) {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        if (status == terminal2.SUCCESS) {
+                            current.itemPath = VmFileManager.getPath(vmID, "disk.qcow2");
+                            save();
+                        }
+                    });
+                }
+
+                @Override
+                public void onError(String command, Exception exception) {
+                    new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(getApplicationContext(), getString(R.string.an_error_occurred_while_creating_the_virtual_drive), Toast.LENGTH_SHORT).show());
+                }
+            });
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
     private void importRom(Uri fileUri, String filePath, String fileName) {
         if (isFinishing() || isDestroyed()) return;
+
+        if (fileName == null || fileName.isEmpty()) {
+            if (filePath != null && !filePath.isEmpty()) {
+                fileName = new File(filePath).getName();
+            } else if (fileUri != null) {
+                fileName = FileUtils.getFileNameFromUri(this, fileUri);
+            }
+        }
+        if (fileName == null) fileName = "";
+
+        if (FormatManager.isOpticalFileFormat(fileName)) {
+            importIsoImage(fileUri, filePath, fileName);
+            return;
+        }
+
+        if (FormatManager.isHardDriveFileFormat(fileName)) {
+            importDiskImage(fileUri, filePath, fileName);
+            return;
+        }
 
         if (!(fileName.endsWith(".cvbi") || filePath.endsWith(".cvbi.zip"))) {
             DialogUtils.oneDialog(this,
