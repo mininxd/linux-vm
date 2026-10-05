@@ -1024,26 +1024,29 @@ public class VMCreatorActivity extends AppCompatActivity {
     private void importRom(Uri fileUri, String filePath, String fileName) {
         if (isFinishing() || isDestroyed()) return;
 
-        if (fileName == null || fileName.isEmpty()) {
+        String resolvedFileName = fileName;
+        if (resolvedFileName == null || resolvedFileName.isEmpty()) {
             if (filePath != null && !filePath.isEmpty()) {
-                fileName = new File(filePath).getName();
+                resolvedFileName = new File(filePath).getName();
             } else if (fileUri != null) {
-                fileName = FileUtils.getFileNameFromUri(this, fileUri);
+                resolvedFileName = FileUtils.getFileNameFromUri(this, fileUri);
             }
         }
-        if (fileName == null) fileName = "";
+        if (resolvedFileName == null) resolvedFileName = "";
 
-        if (FormatManager.isOpticalFileFormat(fileName)) {
-            importIsoImage(fileUri, filePath, fileName);
+        final String finalFileName = resolvedFileName;
+
+        if (FormatManager.isOpticalFileFormat(finalFileName)) {
+            importIsoImage(fileUri, filePath, finalFileName);
             return;
         }
 
-        if (FormatManager.isHardDriveFileFormat(fileName)) {
-            importDiskImage(fileUri, filePath, fileName);
+        if (FormatManager.isHardDriveFileFormat(finalFileName)) {
+            importDiskImage(fileUri, filePath, finalFileName);
             return;
         }
 
-        if (!(fileName.endsWith(".cvbi") || filePath.endsWith(".cvbi.zip"))) {
+        if (!(finalFileName.endsWith(".cvbi") || filePath.endsWith(".cvbi.zip"))) {
             DialogUtils.oneDialog(this,
                     getResources().getString(R.string.problem_has_been_detected),
                     getResources().getString(R.string.format_not_supported_please_select_file_with_format_cvbi),
@@ -1122,7 +1125,7 @@ public class VMCreatorActivity extends AppCompatActivity {
                 }
 
                 if (result) {
-                    afterExtractCVBIFile(fileName);
+                    afterExtractCVBIFile(finalFileName);
                 } else {
                     runOnUiThread(() -> DialogUtils.oneDialog(VMCreatorActivity.this,
                             getString(R.string.oops),
